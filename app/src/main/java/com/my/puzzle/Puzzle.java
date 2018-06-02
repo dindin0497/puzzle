@@ -1,11 +1,15 @@
 package com.my.puzzle;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+
 
 public class Puzzle implements IPuzzle{
 
@@ -22,33 +26,46 @@ public class Puzzle implements IPuzzle{
 
     int direction[];
 
-    onWinListener winListener;
-
-    IPuzzle.onUIListener uiListener;
+    WeakReference<Handler> uiHandlerReference;
 
 
-
-
-    public Puzzle(int row, onWinListener listener)
+    public Puzzle(int row)
     {
-        winListener=listener;
         rowNum=row;
         data=new int[rowNum*rowNum];
+
+        direction=new int[]{-rowNum,rowNum,-1,1};
+
+        init();
+    }
+
+    protected void init()
+    {
         for (int i=0; i<data.length; i++)
             data[i]=i+1;
         missingNum=data.length;
         missingNumIndex=data.length-1;
 
-        direction=new int[]{-rowNum,rowNum,-1,1};
         getNeighbour();
-
 
     }
 
+    @Override
+    public void newGame() {
+        init();
+        if (uiHandlerReference.get()!=null)
+            uiHandlerReference.get().sendEmptyMessage(Constants.MSG_REFRESH_ALL);
+        shuffle();
+    }
 
+    @Override
+    public void reset() {
 
-    public void setUiListener(IPuzzle.onUIListener uiListener) {
-        this.uiListener = uiListener;
+    }
+
+    @Override
+    public boolean undo() {
+        return false;
     }
 
     private void getNeighbour()
@@ -89,6 +106,11 @@ public class Puzzle implements IPuzzle{
 
     }
 
+    @Override
+    public void setUiHandler(Handler handler) {
+        uiHandlerReference=new WeakReference<Handler>(handler);
+    }
+
     public void onClick(int pos, boolean check)
     {
         if (!neighbourSet.contains(pos))
@@ -96,8 +118,14 @@ public class Puzzle implements IPuzzle{
 
         swap(missingNumIndex,pos);
 
-        uiListener.refresh(missingNumIndex);
-        uiListener.refresh(pos);
+        Message msg=new Message();
+        msg.what=Constants.MSG_REFRESH_UI;
+        msg.arg1=missingNumIndex;
+        msg.arg2=pos;
+
+        final Handler handler=uiHandlerReference.get();
+        if (handler!=null)
+            handler.sendMessage(msg);
 
         missingNumIndex=pos;
         getNeighbour();
@@ -126,23 +154,54 @@ public class Puzzle implements IPuzzle{
             if (data[i]-data[i-1]!=1)
                 return;
         }
-        winListener.onWin();
+        final Handler handler=uiHandlerReference.get();
+        if (handler!=null)
+            handler.sendEmptyMessage(Constants.MSG_WIN);
     }
 
-    public void shuffle()
+    private void shuffle()
     {
-        int pre=missingNumIndex;
+
+        new Thread(){
+            @Override
+            public void run()  {
+                inner_shuffle();
+            }
+        }.start();
+    }
+
+    private void inner_shuffle()
+    {
+        int pre=-1;
         Random rand=new Random();
-        for (int i=0;i<Constants.SHUFFLE_STEP;i++) {
-            Integer ary[] = neighbourSet.toArray(new Integer[neighbourSet.size()]);
-            int idx = rand.nextInt(ary.length);
+        try {
+            int i=0;
+            while (i < Constants.SHUFFLE_STEP ) {
+                if (uiHandlerReference.get()==null)
+                {
+                    Log.d(TAG,"Activity already destroy");
+                    return;
+                }
+                Integer ary[] = neighbourSet.toArray(new Integer[neighbourSet.size()]);
+                int idx = rand.nextInt(ary.length);
 
-            int pos = ary[idx];
-            if (pos == pre)
-                continue;
+                int pos = ary[idx];
+                if (pos == pre)
+                    continue;
 
-            pre = pos;
-            onClick(pos,false);
+                i++;
+                Log.d(TAG,pre+" - "+pos);
+
+                pre=missingNumIndex;
+
+                onClick(pos, false);
+                Thread.sleep(50);
+
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
         }
     }
 

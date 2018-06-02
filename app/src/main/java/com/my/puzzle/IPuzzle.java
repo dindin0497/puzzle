@@ -1,32 +1,32 @@
 package com.my.puzzle;
 
+
+import android.os.Handler;
+
 /**
  * puzzle interface
  */
 public interface IPuzzle {
 
+    /**
+     * set ui handler
+     */
+    void newGame();
 
     /**
-     * ui refresh listener
+     * reset to initial state
      */
-    interface onUIListener
-    {
-        void refresh(int pos);
-    }
+    void reset();
 
     /**
-     * win listener
+     * undo last step
      */
-    interface onWinListener
-    {
-        void onWin();
-    }
-
+    boolean undo();
 
     /**
-     * set ui listener
+     * set ui handler
      */
-    void setUiListener(onUIListener uiListener);
+    void setUiHandler(Handler handler);
 
     /**
      * get row number
@@ -43,10 +43,6 @@ public interface IPuzzle {
      */
     String getText(int pos);
 
-    /**
-     * shuffle the data
-     */
-    void shuffle();
 
     /**
      * process user click position event

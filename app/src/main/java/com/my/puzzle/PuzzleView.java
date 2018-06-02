@@ -2,6 +2,9 @@ package com.my.puzzle;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -9,10 +12,11 @@ import android.view.View;
 import android.widget.GridLayout;
 import android.widget.TextView;
 
+
 /**
  * puzzle ui
  */
-public class PuzzleView extends GridLayout implements View.OnClickListener, IPuzzle.onUIListener{
+public class PuzzleView extends GridLayout implements View.OnClickListener{
 
     private static final String TAG = PuzzleView.class.getSimpleName();
 
@@ -21,6 +25,29 @@ public class PuzzleView extends GridLayout implements View.OnClickListener, IPuz
     private TextView tvArray[];
 
     private IPuzzle puzzle;
+
+    private Handler handler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case Constants.MSG_REFRESH_UI:
+                    update(msg.arg1);
+                    update(msg.arg2);
+                    break;
+                case Constants.MSG_REFRESH_ALL:
+                    for (int i=0;i<tvArray.length;i++)
+                        update(i);
+                    break;
+                case Constants.MSG_WIN:
+                    new AlertDialog.Builder(getContext())
+                            .setTitle(R.string.win_title)
+                            .setMessage(R.string.win_text)
+                            .setPositiveButton(R.string.ok, null)
+                            .show();
+                    break;
+            }
+        }
+    };
 
     public PuzzleView(Context context) {
         super(context);
@@ -44,7 +71,7 @@ public class PuzzleView extends GridLayout implements View.OnClickListener, IPuz
     public void setData(IPuzzle puzzle)
     {
         this.puzzle=puzzle;
-        puzzle.setUiListener(this);
+        puzzle.setUiHandler(handler);
 
         rowNum=puzzle.getRow();
 
@@ -80,10 +107,6 @@ public class PuzzleView extends GridLayout implements View.OnClickListener, IPuz
 
     }
 
-    @Override
-    public void refresh(int pos) {
-        update(pos);
-    }
 
     private void update(int pos)
     {

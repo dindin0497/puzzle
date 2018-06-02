@@ -1,24 +1,14 @@
 package com.my.puzzle;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.DialogInterface;
-import android.support.v7.app.AlertDialog;
+
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    IPuzzle puzzle=new Puzzle(Constants.PUZZLE_ROW, new Puzzle.onWinListener() {
-        @Override
-        public void onWin() {
-            new AlertDialog.Builder(MainActivity.this)
-                    .setTitle(R.string.win_title)
-                    .setMessage(R.string.win_text)
-                    .setPositiveButton(R.string.ok, null)
-                    .show();
-        }
-    });
+    IPuzzle puzzle=new Puzzle(Constants.PUZZLE_ROW);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +18,19 @@ public class MainActivity extends AppCompatActivity {
         PuzzleView puzzleView=findViewById(R.id.puzzleView);
         puzzleView.setData(puzzle);
 
-        puzzle.shuffle();
+        Button btn_new=findViewById(R.id.btn_new);
+        btn_new.setOnClickListener(this);
+
+        puzzle.newGame();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId())
+        {
+            case R.id.btn_new:
+                puzzle.newGame();
+                break;
+        }
     }
 }

@@ -3,4 +3,7 @@
     <string name='win_title'>Congratulations</string>
     <string name='win_text'>You win</string>
     <string name='ok'>Ok</string>
+    <string name='undo'>Undo</string>
+    <string name='new_game'>New Game</string>
+    <string name='reset'>Reset</string>
 </resources>
