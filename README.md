@@ -4,4 +4,4 @@
 
 
 
-![screenshot](https://github.com/dindin0497/MySudoku/blob/master/Screenshot.png)
+![screenshot](https://github.com/dindin0497/puzzle/blob/master/Screenshot.png)
